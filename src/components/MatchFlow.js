@@ -1,7 +1,6 @@
 import React from 'react';
 
 const MatchFlow = (props) => {
-
     const showDate =(date,prevDate) =>{
         if(date !== prevDate){
             return (<div>{date}</div>)

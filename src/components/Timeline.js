@@ -17,6 +17,7 @@ const Timeline = (props) =>{
 
     useEffect(()=>{
         if(props.matches.length && props.matches.length !== props.matchIndex){
+            console.log('m index is ', props.matchIndex , ' and len of matches is ', props.matches.length)
             setProgress(getDateProgress(sDate,eDate,props.matches[props.matchIndex].date))
         }
     },[props.matchIndex])

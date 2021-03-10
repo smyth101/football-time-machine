@@ -25,7 +25,7 @@ const App = () =>{
     },[]);
 
 
-  const runTimeline = async (games,date=false) =>{
+  const runTimeline = async (games,date=false,dateObj=false) =>{
     let pace
     if(date){
       pace = 0
@@ -37,15 +37,26 @@ const App = () =>{
       return
     }
     let match = games[0]
-    addResult(match.homeTeam,match.awayTeam,match.homeGoals,match.awayGoals,match.date)
+    let nextMatch = games[1] ?? match
+    let matchDate = convertToDate(nextMatch.date)
+    let chosenDate = new Date(date)
+    let newDateObj
+    if(date){
+      if(games.length == 1 || matchDate > chosenDate){
+        addResult(match.homeTeam,match.awayTeam,match.homeGoals,match.awayGoals,{'teams':dateObj.teams,'mIndex':dateObj.mIndex,'last':true})    
+      }
+      else{
+        newDateObj = addResult(match.homeTeam,match.awayTeam,match.homeGoals,match.awayGoals,{'teams':dateObj.teams,'mIndex':dateObj.mIndex,'last':false})    
+      }
+    }
+    else{
+      addResult(match.homeTeam,match.awayTeam,match.homeGoals,match.awayGoals)
+    }
     setTimeout(()=>{
       if(!playing.current){
         return
       }
       else if(date){
-        let nextMatch = games[1] ?? match
-        let matchDate = convertToDate(nextMatch.date)
-        let chosenDate = new Date(date)
         if(matchDate > chosenDate){
           setPlaying(false)
           playing.current = false
@@ -53,7 +64,7 @@ const App = () =>{
 
         }
         else{
-          runTimeline(games.slice(1),endDate)
+          runTimeline(games.slice(1),endDate,newDateObj)
         }
       }
       else{
@@ -70,11 +81,11 @@ const App = () =>{
         return team.played
       }
     })
-    if(tableSize && playedGames.length){
+    if(tableSize && playedGames.length ){
         setMatchIndex(matchIndex + 1)
       
     }
-  },[teams,tableSize]);
+  },[teams]);
   
   const initTeams = async (fname) =>{
     const rows = await fetch(fname).then(response => response.text()).then(table => table.trim().split('\n'))
@@ -113,8 +124,7 @@ const App = () =>{
         teams.push(cols[awayTeamIndex])
       }
     })
-    teams = teams.sort()
-    let sortedTeams = teams.map((team,index) => {
+    let sortedTeams = teams.sort().map((team,index) => {
       return {'name':team,'pos':index+1,'played':0,'pts':0,'gd':0,'gf':0,'ga':0}
     });
     setTeams(sortedTeams)
@@ -123,48 +133,68 @@ const App = () =>{
   }
 
 
-  const addResult = (homeTeam,awayTeam,homeGoals,awayGoals) => {
-      homeGoals = parseInt(homeGoals)
-      awayGoals = parseInt(awayGoals)
-      let updatedTeams = teams.map(team => {
-        if(team.name === homeTeam){
-          if(homeGoals > awayGoals){
-            team.pts += 3;
-          }
-          else if(homeGoals === awayGoals){
-            team.pts +=1;
-          }
-          team.gf += homeGoals;
-          team.ga += awayGoals;
-          team.played += 1;
-          team.gd += (homeGoals - awayGoals)
+  const addResult = (homeTeam,awayTeam,homeGoals,awayGoals,dateObj = false) => {
+    let currentTeams  
+    if(dateObj){
+        currentTeams = dateObj.teams
+    }
+    else{
+      currentTeams = teams
+    }
+    homeGoals = parseInt(homeGoals)
+    awayGoals = parseInt(awayGoals)
+    let updatedTeams = currentTeams.map(team => {
+      if(team.name === homeTeam){
+        if(homeGoals > awayGoals){
+          team.pts += 3;
         }
-        else if(team.name === awayTeam){
-          if( awayGoals > homeGoals){
-            team.pts += 3;
-          }
-          else if(homeGoals === awayGoals){
-            team.pts +=1;
-          }
-          team.gf += awayGoals;
-          team.ga += homeGoals;
-          team.played += 1;
-          team.gd += (awayGoals - homeGoals)
+        else if(homeGoals === awayGoals){
+          team.pts +=1;
         }
-  
-        return team;
-      })
-      // stable sort leaving list unchanged in event of two teams even on all values
-      let sortedTeams = updatedTeams.sort((a, b) => 
-      (a.pts < b.pts) ? 1 : (a.pts === b.pts)?(a.gd < b.gd)?1:(a.gd === b.gd)?b.gf - a.gf:-1:-1
-      )
+        team.gf += homeGoals;
+        team.ga += awayGoals;
+        team.played += 1;
+        team.gd += (homeGoals - awayGoals)
+      }
+      else if(team.name === awayTeam){
+        if( awayGoals > homeGoals){
+          team.pts += 3;
+        }
+        else if(homeGoals === awayGoals){
+          team.pts +=1;
+        }
+        team.gf += awayGoals;
+        team.ga += homeGoals;
+        team.played += 1;
+        team.gd += (awayGoals - homeGoals)
+      }
 
-      let sortedUpdatedTeams = sortedTeams.map((team,index) => {
-        team.pos = index + 1
-        return team
-      })
-      let finalTeams  = sortedUpdatedTeams.sort((a,b) => (a.name < b.name)?1:-1)
+      return team;
+    })
+    // stable sort leaving list unchanged in event of two teams even on all values
+    let sortedTeams = updatedTeams.sort((a, b) => 
+    (a.pts < b.pts) ? 1 : (a.pts === b.pts)?(a.gd < b.gd)?1:(a.gd === b.gd)?b.gf - a.gf:-1:-1
+    )
+
+    let sortedUpdatedTeams = sortedTeams.map((team,index) => {
+      team.pos = index + 1
+      return team
+    })
+    let finalTeams  = sortedUpdatedTeams.sort((a,b) => (a.name < b.name)?1:-1)
+    if(dateObj){
+      if(dateObj.last){
+        setMatchIndex(dateObj.mIndex)
+        setTeams(finalTeams)
+        console.log('X LAST HAS BEEN TRIGGERED')
+      }
+      else{
+        return {'teams':finalTeams,'mIndex': dateObj.mIndex + 1}
+      }
+    }
+    else{
       setTeams(finalTeams)
+    }
+
 
   }
 
@@ -184,51 +214,61 @@ const App = () =>{
   
 
 
-const play = () =>{
-  playing.current  = true
-  let remainingMatches = matches.slice(matchIndex)
-  setPlaying(true)
-  if(endDate){
-    if(new Date(endDate) < convertToDate(remainingMatches[0].date)){
-      setMatchIndex(0)
-      runTimeline(matches,endDate)
+  const play = () =>{
+    playing.current  = true
+    let remainingMatches = matches.slice(matchIndex)
+    setPlaying(true)
+    if(endDate){
+      if(new Date(endDate) < convertToDate(remainingMatches[0].date)){
+        setMatchIndex(0)
+        let initTeams = teams.map((team,index) => {
+          team.pos = index+1
+          team.played = 0
+          team.gf = 0
+          team.ga = 0
+          team.gd = 0
+          team.pts = 0
+          return team
+        });
+        runTimeline(matches,endDate,{'teams':initTeams,'mIndex':0})
+      }
+      else{
+        runTimeline(remainingMatches,endDate,{'teams':teams,'mIndex':matchIndex})
+      }
     }
     else{
-      runTimeline(remainingMatches,endDate)
+      runTimeline(remainingMatches)
     }
   }
-  else{
-    runTimeline(remainingMatches)
+
+  const pause = () => {
+    playing.current = false
+    setPlaying(false)
   }
-}
 
-const pause = () => {
-  playing.current = false
-  setPlaying(false)
-}
+  const restart = () =>{
+    setMatchIndex(0)
+    initTeams(filename)
+    playing.current  = false
+    setPlaying(false)
+  }
 
-const restart = () =>{
-  setMatchIndex(0)
-  initTeams(filename)
-  playing.current  = false
-  setPlaying(false)
-}
+  const setDate = (e) => {
+    setEndDate(e.target.value)
+  }
 
-const setDate = (e) => {
-  setEndDate(e.target.value)
-}
-    let playedMatches = matches.slice(0,matchIndex)
-    return(
-    <div style={{textAlign:'center'}}>
-      <h1>Football Time Machine</h1>
-      <div style={{width:'70%',marginLeft:'15%'}}>
-        <Timeline isPlaying={isPlaying} speed={speed} changeSpeed={changeSpeed} matches={matches} matchIndex={matchIndex} setDate={setDate} changeFile={changeFile} filename={filename}></Timeline>
-        <MatchFlow matches={playedMatches}></MatchFlow>
-        <Table teams={teams} tableSize={tableSize} speed={speeds[speed]}/>
-        <PlayPauseBtn runTimeline={runTimeline} matches={matches} isPlaying={isPlaying} pause={pause} play={play} restart={restart} matchIndex={matchIndex}></PlayPauseBtn>
-      </div>
+  let playedMatches = matches.slice(0,matchIndex)
+  return(
+  <div style={{textAlign:'center'}}>
+    <h1>Football Time Machine</h1>
+    <div style={{width:'70%',marginLeft:'15%'}}>
+      <Timeline isPlaying={isPlaying} speed={speed} changeSpeed={changeSpeed} matches={matches} matchIndex={matchIndex} setDate={setDate} changeFile={changeFile} filename={filename}></Timeline>
+      <MatchFlow matches={playedMatches}></MatchFlow>
+      <Table teams={teams} tableSize={tableSize} speed={speeds[speed]}/>
+      <PlayPauseBtn runTimeline={runTimeline} matches={matches} isPlaying={isPlaying} pause={pause} play={play} restart={restart} matchIndex={matchIndex}></PlayPauseBtn>
     </div>
-    )
+  </div>
+  )
 }
 
 

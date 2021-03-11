@@ -3,7 +3,8 @@ import React, {useState,useEffect,useRef} from 'react';
 import Table from './components/Table.js';
 import Timeline from './components/Timeline.js';
 import MatchFlow from './components/MatchFlow.js';
-import convertToDate from './functions.js'
+import convertToDate from './functions.js';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = () =>{
   
@@ -258,9 +259,13 @@ const App = () =>{
 
   let playedMatches = matches.slice(0,matchIndex)
   return(
-  <div style={{textAlign:'center'}}>
-    <h1>Football Time Machine</h1>
-    <div style={{width:'70%',marginLeft:'15%'}}>
+  <div className='App'>
+    <div id='header'>
+      <img src='new-ball.png'></img>
+      <h1>Football Time Machine</h1>
+      <img src='old-ball.png'></img>
+    </div>
+    <div className='main-container'>
       <Timeline isPlaying={isPlaying} speed={speed} changeSpeed={changeSpeed} matches={matches} matchIndex={matchIndex} setDate={setDate} changeFile={changeFile} filename={filename}></Timeline>
       <MatchFlow matches={playedMatches}></MatchFlow>
       <Table teams={teams} tableSize={tableSize} speed={speeds[speed]}/>
@@ -275,7 +280,7 @@ const PlayPauseBtn = (props) => {
   if(props.matches.length > 0 &&props.matchIndex == props.matches.length){
     return(
       <div>
-        <button onClick={() => {props.restart()}}>
+        <button className='btn btn-primary mb-2' onClick={() => {props.restart()}}>
           Restart
         </button>
       </div>
@@ -283,14 +288,14 @@ const PlayPauseBtn = (props) => {
   }
   if(props.isPlaying){
     return (<div>
-      <button onClick={() => {props.pause()}}>
+      <button className='btn btn-primary mb-2' onClick={() => {props.pause()}}>
         Pause
       </button>
     </div>)
   }
   else{
     return (<div>
-        <button onClick = {() => {props.play();}}>
+        <button className='btn btn-primary mb-2' onClick = {() => {props.play();}}>
           Play
         </button>
       </div>)

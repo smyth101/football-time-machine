@@ -10,6 +10,7 @@ const Timeline = (props) =>{
     const [year,setYear] = useState(2021)
 
     const leaguesAndYears = [
+        // premier league 2015 and ligue 1 2016 csv files are incomplete hence why they have been left out of year listings
         {
             'league':'premier-league',
             'years':[2021,2020,2019,2018,2017,2016,2014,2013,2012,2011,2010,2009,2008,2007,2006,2005,2004,2003,2002,2001],
@@ -17,17 +18,14 @@ const Timeline = (props) =>{
         },
         {
             'league':'ligue1',
-            'years':[2020],
+            'years':[2020,2019,2018,2017,2015],
             'title':'Ligue 1'
         }
     ]
 
     useEffect(()=>{
         if(props.matches.length){
-            console.log('effect has been triggered')
             setStartDate(props.matches[0].date)
-            console.log('new start date is ', props.matches[0].date)
-            console.log('new end date is ', props.matches[props.matches.length-1].date)
             setEndDate(props.matches[props.matches.length-1].date)
         }
     },[props.matches])
@@ -66,28 +64,38 @@ const Timeline = (props) =>{
     },[league,year])
 
     return(
-        <div>
-            Speed: <select defaultValue={props.speed} onChange={(e) => {props.changeSpeed(e)}}>
-                <option disabled={props.isPlaying}>Slow</option>
-                <option disabled={props.isPlaying}>Normal</option>
-                <option disabled={props.isPlaying}>Fast</option>
-            </select>
-            League: <select defaultValue={league} onChange={(e) => {changeLeague(e)}}>
-                {leaguesAndYears.map(league => {
-                    return (<option value={league.league} disabled={props.isPlaying}>{league.title}</option>)
-                })}
-            </select>
-            Year: <select value={year} onChange={(e) => {setYear(parseInt(e.target.value))}}>
-                {
-                    leaguesAndYears.find(obj => obj.league === league).years.map(year => {
-                    return (<option disabled={props.isPlaying} value={year}>{year}</option>)
-                    })
+        <div className='w-100 mt-4'>
+            {/* <div className='row'> */}
+                <div className='d-inline-block m-2'>
+                    Speed: <select defaultValue={props.speed} onChange={(e) => {props.changeSpeed(e)}}>
+                        <option disabled={props.isPlaying}>Slow</option>
+                        <option disabled={props.isPlaying}>Normal</option>
+                        <option disabled={props.isPlaying}>Fast</option>
+                    </select>
+                </div>
+                <div className='d-inline-block m-2'>
+                    League: <select defaultValue={league} onChange={(e) => {changeLeague(e)}}>
+                        {leaguesAndYears.map((league,index) => {
+                            return (<option value={league.league} disabled={props.isPlaying} key={league.league}>{league.title}</option>)
+                        })}
+                    </select>
+                </div>
+                <div className='d-inline-block m-2'>
+                    Year: <select value={year} onChange={(e) => {setYear(parseInt(e.target.value))}}>
+                        {
+                            leaguesAndYears.find(obj => obj.league === league).years.map(year => {
+                            return (<option disabled={props.isPlaying} value={year} key={league + year}>{year}</option>)
+                            })
 
-                }
-            </select>
-            <input type='date' min={(sDate)?convertToDate(sDate,true):'yyyy-mm-dd'} max={(eDate)?convertToDate(eDate,true):''} disabled={props.isPlaying} onChange={(e) => {props.setDate(e)}}></input>
-            <div style={{width:'100%', height:'20px', backgroundColor:'gray'}}>
-                <div style={{width:progressPercent + '%', height:'100%',backgroundColor:'blue'}}></div>
+                        }
+                    </select>
+                </div>
+                <div className='d-inline-block m-2'>
+                    Date: <input type='date' min={(sDate)?convertToDate(sDate,true):'yyyy-mm-dd'} max={(eDate)?convertToDate(eDate,true):''} disabled={props.isPlaying} onChange={(e) => {props.setDate(e)}}></input>
+                </div>
+            {/* </div> */}
+            <div className='progress-container row rounded mt-2 mb-3'>
+                <div className='progress-b rounded' style={{width:progressPercent + '%'}}></div>
             </div>
         </div>
     )

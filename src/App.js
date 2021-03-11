@@ -15,7 +15,7 @@ const App = () =>{
   const [matches,setMatches] = useState([])
   const [matchIndex,setMatchIndex] = useState(0)
   const [endDate,setEndDate] = useState('')
-  const [filename,setFilename] = useState('E0-2021.csv')
+  const [filename,setFilename] = useState('premier-league/2021.csv')
   
   
   const speeds = {'Normal':1000,'Fast':100,'Slow':5000}
@@ -185,7 +185,6 @@ const App = () =>{
       if(dateObj.last){
         setMatchIndex(dateObj.mIndex)
         setTeams(finalTeams)
-        console.log('X LAST HAS BEEN TRIGGERED')
       }
       else{
         return {'teams':finalTeams,'mIndex': dateObj.mIndex + 1}
@@ -202,8 +201,8 @@ const App = () =>{
     setSpeed(event.target.value)
   }
 
-  const changeFile = (e) =>{
-    setFilename(e.target.value)
+  const changeFile = (file) =>{
+    setFilename(file)
   }
 
   
